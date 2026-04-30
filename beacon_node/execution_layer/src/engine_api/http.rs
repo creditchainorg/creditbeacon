@@ -95,9 +95,9 @@ pub static LIGHTHOUSE_CAPABILITIES: &[&str] = &[
 /// 2. The Json version lacks error checking so we can avoid calling `unwrap()`
 pub static LIGHTHOUSE_JSON_CLIENT_VERSION: LazyLock<JsonClientVersionV1> =
     LazyLock::new(|| JsonClientVersionV1 {
-        code: ClientCode::Lighthouse.to_string(),
-        name: "Lighthouse".to_string(),
-        version: VERSION.replace("Lighthouse/", ""),
+        code: ClientCode::Unknown("CB".to_string()).to_string(),
+        name: "CreditChain Beacon".to_string(),
+        version: VERSION.replace("CreditChain Beacon/", ""),
         commit: COMMIT_PREFIX.to_string(),
     });
 

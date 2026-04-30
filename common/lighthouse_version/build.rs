@@ -3,7 +3,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-const CLIENT_NAME: &str = "Lighthouse";
+const CLIENT_NAME: &str = "CreditChain Beacon";
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
@@ -38,7 +38,7 @@ fn main() {
         }
     }
 
-    // Construct Lighthouse version string without commit hash.
+    // Construct CreditChain Beacon version string without commit hash.
     let base_version = format!("{}/v{}", CLIENT_NAME, semantic_version);
 
     let commit_hash = get_git_hash(7);

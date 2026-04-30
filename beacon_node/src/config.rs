@@ -68,7 +68,7 @@ pub fn get_config<E: EthSpec>(
                 );
                 info!(
                     "Type 'confirm' to delete the database. Any other input will leave \
-                    the database intact and Lighthouse will exit."
+                    the database intact and CreditChain Beacon will exit."
                 );
                 let confirmation = read_input_from_user(stdin_inputs)?;
 
@@ -79,7 +79,7 @@ pub fn get_config<E: EthSpec>(
                     purge_db(chain_db, freezer_db, blobs_db)?;
                     info!("Database was deleted.");
                 } else {
-                    info!("Database was not deleted. Lighthouse will now close.");
+                    info!("Database was not deleted. CreditChain Beacon will now close.");
                     std::process::exit(1);
                 }
             } else {
@@ -889,7 +889,7 @@ pub fn get_config<E: EthSpec>(
     Ok(client_config)
 }
 
-/// Gets the listening_addresses for lighthouse based on the cli options.
+/// Gets the listening_addresses for CreditChain Beacon based on the cli options.
 pub fn parse_listening_addresses(cli_args: &ArgMatches) -> Result<ListenAddress, String> {
     let listen_addresses_str = cli_args
         .get_many::<String>("listen-address")

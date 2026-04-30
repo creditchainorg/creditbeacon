@@ -10,7 +10,7 @@ on:
 
 env:
   DOCKER_REPRODUCIBLE_IMAGE_NAME: >-
-    ${{ github.repository_owner }}/lighthouse-reproducible
+    ${{ github.repository_owner }}/creditbeacon-reproducible
   DOCKER_PASSWORD: ${{ secrets.DH_KEY }}
   DOCKER_USERNAME: ${{ secrets.DH_ORG }}
 
@@ -71,11 +71,11 @@ jobs:
             --platform ${{ matrix.platform }} \
             --build-arg RUST_TARGET="${{ matrix.rust_target }}" \
             --build-arg RUST_IMAGE="${{ matrix.rust_image }}" \
-            -t lighthouse-verify-1-${{ matrix.arch }} .
+            -t creditbeacon-verify-1-${{ matrix.arch }} .
 
           # Extract binary from first build
-          docker create --name extract-1-${{ matrix.arch }} lighthouse-verify-1-${{ matrix.arch }}
-          docker cp extract-1-${{ matrix.arch }}:/lighthouse ./lighthouse-1-${{ matrix.arch }}
+          docker create --name extract-1-${{ matrix.arch }} creditbeacon-verify-1-${{ matrix.arch }}
+          docker cp extract-1-${{ matrix.arch }}:/creditbeacon ./creditbeacon-1-${{ matrix.arch }}
           docker rm extract-1-${{ matrix.arch }}
 
           # Clean state for second build
@@ -87,36 +87,36 @@ jobs:
             --platform ${{ matrix.platform }} \
             --build-arg RUST_TARGET="${{ matrix.rust_target }}" \
             --build-arg RUST_IMAGE="${{ matrix.rust_image }}" \
-            -t lighthouse-verify-2-${{ matrix.arch }} .
+            -t creditbeacon-verify-2-${{ matrix.arch }} .
 
           # Extract binary from second build
-          docker create --name extract-2-${{ matrix.arch }} lighthouse-verify-2-${{ matrix.arch }}
-          docker cp extract-2-${{ matrix.arch }}:/lighthouse ./lighthouse-2-${{ matrix.arch }}
+          docker create --name extract-2-${{ matrix.arch }} creditbeacon-verify-2-${{ matrix.arch }}
+          docker cp extract-2-${{ matrix.arch }}:/creditbeacon ./creditbeacon-2-${{ matrix.arch }}
           docker rm extract-2-${{ matrix.arch }}
 
           # Compare binaries
           echo "=== Comparing binaries ==="
-          echo "Build 1 SHA256: $(sha256sum lighthouse-1-${{ matrix.arch }})"
-          echo "Build 2 SHA256: $(sha256sum lighthouse-2-${{ matrix.arch }})"
+          echo "Build 1 SHA256: $(sha256sum creditbeacon-1-${{ matrix.arch }})"
+          echo "Build 2 SHA256: $(sha256sum creditbeacon-2-${{ matrix.arch }})"
 
-          if cmp lighthouse-1-${{ matrix.arch }} lighthouse-2-${{ matrix.arch }}; then
+          if cmp creditbeacon-1-${{ matrix.arch }} creditbeacon-2-${{ matrix.arch }}; then
             echo "Reproducible build verified for ${{ matrix.arch }}"
           else
             echo "Reproducible build FAILED for ${{ matrix.arch }}"
             echo "BLOCKING RELEASE: Builds are not reproducible!"
             echo "First 10 differences:"
-            cmp -l lighthouse-1-${{ matrix.arch }} lighthouse-2-${{ matrix.arch }} | head -10
+            cmp -l creditbeacon-1-${{ matrix.arch }} creditbeacon-2-${{ matrix.arch }} | head -10
             exit 1
           fi
 
           # Clean up verification artifacts but keep one image for publishing
-          rm -f lighthouse-*-${{ matrix.arch }}
-          docker rmi lighthouse-verify-1-${{ matrix.arch }} || true
+          rm -f creditbeacon-*-${{ matrix.arch }}
+          docker rmi creditbeacon-verify-1-${{ matrix.arch }} || true
 
           # Re-tag the second image for publishing (we verified it's identical to first)
           VERSION=${{ needs.extract-version.outputs.VERSION }}
           FINAL_TAG="${{ env.DOCKER_REPRODUCIBLE_IMAGE_NAME }}:${VERSION}-${{ matrix.arch }}"
-          docker tag lighthouse-verify-2-${{ matrix.arch }} "$FINAL_TAG"
+          docker tag creditbeacon-verify-2-${{ matrix.arch }} "$FINAL_TAG"
 
       - name: Log in to Docker Hub
         if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -134,7 +134,7 @@ jobs:
 
       - name: Clean up local images
         run: |
-          docker rmi lighthouse-verify-2-${{ matrix.arch }} || true
+          docker rmi creditbeacon-verify-2-${{ matrix.arch }} || true
           VERSION=${{ needs.extract-version.outputs.VERSION }}
           docker rmi "${{ env.DOCKER_REPRODUCIBLE_IMAGE_NAME }}:${VERSION}-${{ matrix.arch }}" || true
 
@@ -144,7 +144,7 @@ jobs:
         with:
           name: verification-failure-${{ matrix.arch }}
           path: |
-            lighthouse-*-${{ matrix.arch }}
+            creditbeacon-*-${{ matrix.arch }}
 
   create-manifest:
     name: create multi-arch manifest

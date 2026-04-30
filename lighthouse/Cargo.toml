@@ -1,10 +1,26 @@
 [package]
 name = "lighthouse"
 version = { workspace = true }
-authors = ["Sigma Prime <contact@sigmaprime.io>"]
+authors = [
+    "CreditChain Research Team",
+    "Sigma Prime <contact@sigmaprime.io>",
+]
 edition = { workspace = true }
 autotests = false
 rust-version = "1.88.0"
+description = "CreditChain Beacon consensus client, derived from Lighthouse"
+homepage = "https://beacon.creditchain.org"
+repository = "https://github.com/openibank/beacon"
+license = "Apache-2.0"
+default-run = "creditbeacon"
+
+[[bin]]
+name = "creditbeacon"
+path = "src/main.rs"
+
+[[bin]]
+name = "lighthouse"
+path = "src/main.rs"
 
 # Prevent cargo-udeps from flagging the dummy package `target_check`, which exists only
 # to assert properties of the compilation target.

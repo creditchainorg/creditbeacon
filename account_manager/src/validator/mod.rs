@@ -18,7 +18,7 @@ pub const CMD: &str = "validator";
 pub fn cli_app() -> Command {
     Command::new(CMD)
         .display_order(0)
-        .about("Provides commands for managing Eth2 validators.")
+        .about("Provides commands for managing CreditChain Beacon validators.")
         .arg(
             Arg::new(VALIDATOR_DIR_FLAG)
                 .long(VALIDATOR_DIR_FLAG)
@@ -26,7 +26,7 @@ pub fn cli_app() -> Command {
                 .value_name("VALIDATOR_DIRECTORY")
                 .help(
                     "The path to search for validator directories. \
-                    Defaults to ~/.lighthouse/{network}/validators",
+                    Defaults to ~/.creditbeacon/{network}/validators",
                 )
                 .action(ArgAction::Set)
                 .conflicts_with("datadir"),

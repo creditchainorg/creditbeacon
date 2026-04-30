@@ -1,5 +1,5 @@
 """
-Summarise pull requests between two Lighthouse releases.
+Summarise pull requests between two upstream Lighthouse releases.
 
 Usage:
   export GITHUB_TOKEN=your_token
@@ -18,7 +18,7 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 if not GITHUB_TOKEN:
     raise SystemExit("Error: Please set the GITHUB_TOKEN environment variable.")
 
-parser = argparse.ArgumentParser(description="Summarise PRs between two Lighthouse versions.")
+parser = argparse.ArgumentParser(description="Summarise PRs between two upstream Lighthouse versions.")
 parser.add_argument("--base", required=True, help="Base tag or branch (older release)")
 parser.add_argument("--head", required=True, help="Head tag or branch (newer release)")
 args = parser.parse_args()

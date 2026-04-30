@@ -32,7 +32,7 @@ while getopts "e:b:n:phcak" flag; do
         echo
         echo "Options:"
         echo "   -e: enclave name                                default: $ENCLAVE_NAME"
-        echo "   -b: whether to build Lighthouse docker image    default: $BUILD_IMAGE"
+        echo "   -b: whether to build CreditChain Beacon docker image    default: $BUILD_IMAGE"
         echo "   -n: kurtosis network params file path           default: $NETWORK_PARAMS_FILE"
         echo "   -p: enable builder proposals"
         echo "   -c: CI mode, run without other additional services like Grafana and Dora explorer"
@@ -84,11 +84,11 @@ if [ "$KEEP_ENCLAVE" = false ]; then
 fi
 
 if [ "$BUILD_IMAGE" = true ]; then
-    echo "Building Lighthouse Docker image."
+    echo "Building CreditChain Beacon Docker image."
     ROOT_DIR="$SCRIPT_DIR/../.."
     docker build --build-arg FEATURES=portable,spec-minimal -f $ROOT_DIR/Dockerfile -t $LH_IMAGE_NAME $ROOT_DIR
 else
-    echo "Not rebuilding Lighthouse Docker image."
+    echo "Not rebuilding CreditChain Beacon Docker image."
 fi
 
 kurtosis run --enclave $ENCLAVE_NAME github.com/ethpandaops/ethereum-package@$ETHEREUM_PKG_VERSION --args-file $NETWORK_PARAMS_FILE

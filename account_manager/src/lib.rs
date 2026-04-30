@@ -16,7 +16,7 @@ pub const WALLETS_DIR_FLAG: &str = "wallets-dir";
 pub fn cli_app() -> Command {
     Command::new(CMD)
         .visible_aliases(["a", "am", "account"])
-        .about("Utilities for generating and managing Ethereum 2.0 accounts.")
+        .about("Utilities for generating and managing CreditChain Beacon validator accounts.")
         .display_order(0)
         .subcommand(wallet::cli_app())
         .subcommand(validator::cli_app())

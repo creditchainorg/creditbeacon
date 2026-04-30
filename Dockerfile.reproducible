@@ -15,10 +15,11 @@ WORKDIR /app
 RUN make build-reproducible
 
 # Move the binary to a standard location
-RUN mv /app/target/${RUST_TARGET}/release/lighthouse /lighthouse
+RUN mv /app/target/${RUST_TARGET}/release/creditbeacon /creditbeacon
 
 # Create a minimal final image with just the binary
 FROM gcr.io/distroless/cc-debian12:nonroot-6755e21ccd99ddead6edc8106ba03888cbeed41a
-COPY --from=builder /lighthouse /lighthouse
+COPY --from=builder /creditbeacon /creditbeacon
+COPY --from=builder /creditbeacon /lighthouse
 
-ENTRYPOINT [ "/lighthouse" ]
+ENTRYPOINT [ "/creditbeacon" ]

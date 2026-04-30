@@ -13,15 +13,15 @@ This setup can be useful for testing and development.
 
 ## Starting the testnet
 
-To start a testnet, from the Lighthouse root repository:
+To start a testnet, from the CreditChain Beacon root repository:
 
 ```bash
 cd ./scripts/local_testnet
 ./start_local_testnet.sh
 ```
 
-It will build a Lighthouse docker image from the root of the directory and will take an approximately 12 minutes to complete. Once built, the testing will be started automatically. You will see a list of services running and "Started!" at the end. 
-You can also select your own Lighthouse docker image to use by specifying it in `network_params.yaml` under the `cl_image` key.
+It will build a CreditChain Beacon docker image from the root of the directory and will take approximately 12 minutes to complete. Once built, the testing will be started automatically. You will see a list of services running and "Started!" at the end.
+You can also select your own CreditChain Beacon docker image to use by specifying it in `network_params.yaml` under the `cl_image` key.
 Full configuration reference for Kurtosis is specified [here](https://github.com/ethpandaops/ethereum-package?tab=readme-ov-file#configuration).
 
 To view all running services:
@@ -67,7 +67,7 @@ Some testnet parameters can be varied by modifying the `network_params.yaml` fil
 
 ## Stopping the testnet
 
-To stop the testnet, from the Lighthouse root repository:
+To stop the testnet, from the CreditChain Beacon root repository:
 
 ```bash
 cd ./scripts/local_testnet
@@ -78,7 +78,7 @@ You will see "Local testnet stopped." at the end.
 
 ## CLI options
 
-The script comes with some CLI options, which can be viewed with `./start_local_testnet.sh --help`. One of the CLI options is to avoid rebuilding Lighthouse each time the testnet starts, which can be configured with the command:
+The script comes with some CLI options, which can be viewed with `./start_local_testnet.sh --help`. One of the CLI options is to avoid rebuilding CreditChain Beacon each time the testnet starts, which can be configured with the command:
 
 ```bash
 ./start_local_testnet.sh -b false

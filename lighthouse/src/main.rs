@@ -9,7 +9,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use clap_utils::{
     FLAG_HEADER, flags::DISABLE_MALLOC_TUNING_FLAG, get_color_style, get_eth2_network_config,
 };
-use cli::LighthouseSubcommands;
+use cli::CreditBeaconSubcommands;
 use directory::{DEFAULT_BEACON_NODE_DIR, DEFAULT_VALIDATOR_DIR, parse_path_or_default};
 use environment::tracing_common;
 use environment::{EnvironmentBuilder, LoggerConfig};
@@ -34,7 +34,8 @@ use tracing_subscriber::{Layer, filter::EnvFilter, layer::SubscriberExt, util::S
 use types::{EthSpec, EthSpecId};
 use validator_client::ProductionValidatorClient;
 
-pub static SHORT_VERSION: LazyLock<String> = LazyLock::new(|| VERSION.replace("Lighthouse/", ""));
+pub static SHORT_VERSION: LazyLock<String> =
+    LazyLock::new(|| VERSION.replace("CreditChain Beacon/", ""));
 pub static LONG_VERSION: LazyLock<String> = LazyLock::new(|| {
     format!(
         "{}\n\
@@ -104,15 +105,15 @@ fn main() {
     }
 
     // Parse the CLI parameters.
-    let cli = Command::new("Lighthouse")
+    let cli = Command::new("creditbeacon")
         .version(SHORT_VERSION.as_str())
-        .author("Sigma Prime <contact@sigmaprime.io>")
+        .author("CreditChain Research Team")
         .styles(get_color_style())
         .next_line_help(true)
         .term_width(80)
         .disable_help_flag(true)
         .about(
-            "Ethereum 2.0 client by Sigma Prime. Provides a full-featured beacon \
+            "CreditChain Beacon consensus client. Provides a full-featured beacon \
              node, a validator client and utilities for managing validator accounts.",
         )
         .long_version(LONG_VERSION.as_str())
@@ -287,8 +288,8 @@ fn main() {
                 .value_name("NAME")
                 .help(
                     "Override the OpenTelemetry service name. \
-                    Defaults to 'lighthouse-bn' for beacon node, 'lighthouse-vc' for validator \
-                    client, or 'lighthouse' for other subcommands."
+                    Defaults to 'creditbeacon-bn' for beacon node, 'creditbeacon-vc' for validator \
+                    client, or 'creditbeacon' for other subcommands."
                 )
                 .requires("telemetry-collector-url")
                 .action(ArgAction::Set)
@@ -302,8 +303,8 @@ fn main() {
                 .value_name("DIR")
                 .global(true)
                 .help(
-                    "Used to specify a custom root data directory for lighthouse keys and databases. \
-                    Defaults to $HOME/.lighthouse/{network} where network is the value of the `network` flag \
+                    "Used to specify a custom root data directory for CreditChain Beacon keys and databases. \
+                    Defaults to $HOME/.creditbeacon/{network} where network is the value of the `network` flag \
                     Note: Users should specify separate custom datadirs for different networks.")
                 .action(ArgAction::Set)
                 .display_order(0)
@@ -314,8 +315,8 @@ fn main() {
                 .long("testnet-dir")
                 .value_name("DIR")
                 .help(
-                    "Path to directory containing eth2_testnet specs. Defaults to \
-                      a hard-coded Lighthouse testnet. Only effective if there is no \
+                    "Path to directory containing consensus testnet specs. Defaults to \
+                      a hard-coded network. Only effective if there is no \
                       existing database.",
                 )
                 .action(ArgAction::Set)
@@ -326,7 +327,7 @@ fn main() {
             Arg::new("network")
                 .long("network")
                 .value_name("network")
-                .help("Name of the Eth2 chain Lighthouse will sync and follow.")
+                .help("Name of the chain CreditChain Beacon will sync and follow.")
                 .value_parser(HARDCODED_NET_NAMES.to_vec())
                 .conflicts_with("testnet-dir")
                 .action(ArgAction::Set)
@@ -417,7 +418,7 @@ fn main() {
         .subcommand(account_manager::cli_app())
         .subcommand(validator_manager::cli_app());
 
-    let cli = LighthouseSubcommands::augment_subcommands(cli);
+    let cli = CreditBeaconSubcommands::augment_subcommands(cli);
 
     let matches = cli.get_matches();
 
@@ -470,7 +471,7 @@ fn main() {
             #[cfg(not(all(feature = "spec-minimal", feature = "gnosis")))]
             other => {
                 eprintln!(
-                    "Eth spec `{}` is not supported by this build of Lighthouse",
+                    "Eth spec `{}` is not supported by this CreditChain Beacon build",
                     other
                 );
                 eprintln!("You must compile with a feature flag to enable this spec variant");
@@ -671,9 +672,9 @@ fn run<E: EthSpec>(
                 .get_one::<String>("telemetry-service-name")
                 .cloned()
                 .unwrap_or_else(|| match matches.subcommand() {
-                    Some(("beacon_node", _)) => "lighthouse-bn".to_string(),
-                    Some(("validator_client", _)) => "lighthouse-vc".to_string(),
-                    _ => "lighthouse".to_string(),
+                    Some(("beacon_node", _)) => "creditbeacon-bn".to_string(),
+                    Some(("validator_client", _)) => "creditbeacon-vc".to_string(),
+                    _ => "creditbeacon".to_string(),
                 });
 
             // Use ParentBased sampler with PrefixBasedSampler to only export traces
@@ -693,7 +694,7 @@ fn run<E: EthSpec>(
                 )
                 .build();
 
-            let tracer = provider.tracer("lighthouse");
+            let tracer = provider.tracer("creditbeacon");
             Ok::<_, String>(
                 tracing_opentelemetry::layer()
                     .with_tracer(tracer)
@@ -734,15 +735,15 @@ fn run<E: EthSpec>(
     // Allow Prometheus to export the time at which the process was started.
     metrics::expose_process_start_time();
 
-    // Allow Prometheus access to the version and commit of the Lighthouse build.
+    // Allow Prometheus access to the version and commit of the CreditChain Beacon build.
     metrics::expose_lighthouse_version();
 
     #[cfg(all(feature = "modern", target_arch = "x86_64"))]
     if !std::is_x86_feature_detected!("adx") {
         use tracing::warn;
         warn!(
-            advice = "If you get a SIGILL, please try Lighthouse portable build",
-            "CPU seems incompatible with optimized Lighthouse build"
+            advice = "If you get a SIGILL, please try the CreditChain Beacon portable build",
+            "CPU seems incompatible with optimized CreditChain Beacon build"
         );
     }
 
@@ -784,13 +785,13 @@ fn run<E: EthSpec>(
         return Ok(());
     }
 
-    match LighthouseSubcommands::from_arg_matches(matches) {
-        Ok(LighthouseSubcommands::DatabaseManager(db_manager_config)) => {
+    match CreditBeaconSubcommands::from_arg_matches(matches) {
+        Ok(CreditBeaconSubcommands::DatabaseManager(db_manager_config)) => {
             info!("Running database manager for {} network", network_name);
             database_manager::run(matches, &db_manager_config, environment)?;
             return Ok(());
         }
-        Ok(LighthouseSubcommands::ValidatorClient(validator_client_config)) => {
+        Ok(CreditBeaconSubcommands::ValidatorClient(validator_client_config)) => {
             let context = environment.core_context();
             let executor = context.executor.clone();
             let config = validator_client::Config::from_cli(matches, &validator_client_config)
@@ -824,7 +825,7 @@ fn run<E: EthSpec>(
         Err(_) => (),
     };
 
-    info!(version = VERSION, "Lighthouse started");
+    info!(version = VERSION, "CreditChain Beacon started");
     info!(network_name, "Configured network");
 
     match matches.subcommand() {

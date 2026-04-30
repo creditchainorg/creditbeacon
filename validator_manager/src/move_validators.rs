@@ -194,7 +194,7 @@ pub fn cli_app() -> Command {
             Arg::new(PREFER_BUILDER_PROPOSALS_FLAG)
                 .long(PREFER_BUILDER_PROPOSALS_FLAG)
                 .help(
-                    "If this flag is set, Lighthouse will always prefer blocks \
+                    "If this flag is set, CreditChain Beacon will always prefer blocks \
                     constructed by builders, regardless of payload value.",
                 )
                 .required(false)

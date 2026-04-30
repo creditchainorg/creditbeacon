@@ -2,9 +2,8 @@
 authors = ["Paul Hauner", "Age Manning"]
 language = "en"
 src = "src"
-title = "Lighthouse Book"
+title = "CreditChain Beacon Book"
 
 [output.html]
 additional-css =["src/css/custom.css"]
 default-theme = "coal"
-

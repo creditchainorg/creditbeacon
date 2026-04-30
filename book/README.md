@@ -1,9 +1,9 @@
-# Lighthouse Book
+# CreditChain Beacon Book
 
 Contains an [mdBook](https://github.com/rust-lang-nursery/mdBook) that serves
-as the primary source of Lighthouse user documentation.
+as the primary source of CreditChain Beacon user documentation.
 
-The book is hosted at [lighthouse-book.sigmaprime.io](http://lighthouse-book.sigmaprime.io)
+The book is hosted at [beacon.creditchain.org](https://beacon.creditchain.org).
 
 ## Usage
 

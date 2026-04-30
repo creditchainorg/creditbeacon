@@ -13,8 +13,8 @@ pub static PROCESS_START_TIME_SECONDS: LazyLock<Result<IntGauge>> = LazyLock::ne
 
 pub static LIGHTHOUSE_VERSION: LazyLock<Result<IntGaugeVec>> = LazyLock::new(|| {
     try_create_int_gauge_vec(
-        "lighthouse_info",
-        "The build of Lighthouse running on the server",
+        "creditbeacon_info",
+        "The build of CreditChain Beacon running on the server",
         &["version"],
     )
 });

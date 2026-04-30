@@ -41,11 +41,11 @@ RECENT_FORKS=electra fulu gloas
 # Extra flags for Cargo
 CARGO_INSTALL_EXTRA_FLAGS?=
 
-# Builds the Lighthouse binary in release (optimized).
+# Builds the CreditChain Beacon binary in release (optimized).
 #
 # Binaries will most likely be found in `./target/release`
 install:
-	cargo install --path lighthouse --force --locked \
+	cargo install --path lighthouse --bin creditbeacon --force --locked \
 		--features "$(FEATURES)" \
 		--profile "$(PROFILE)" \
 		$(CARGO_INSTALL_EXTRA_FLAGS)
@@ -67,14 +67,14 @@ install-lcli:
 #
 # The resulting binaries will be created in the `target/` directory.
 build-x86_64:
-	cross build --bin lighthouse --target x86_64-unknown-linux-gnu --features "portable,$(CROSS_FEATURES)" --profile "$(CROSS_PROFILE)" --locked
+	cross build --bin creditbeacon --target x86_64-unknown-linux-gnu --features "portable,$(CROSS_FEATURES)" --profile "$(CROSS_PROFILE)" --locked
 build-aarch64:
 	# JEMALLOC_SYS_WITH_LG_PAGE=16 tells jemalloc to support up to 64-KiB
 	# pages, which are commonly used by aarch64 systems.
 	# See: https://github.com/sigp/lighthouse/issues/5244
-	JEMALLOC_SYS_WITH_LG_PAGE=16 cross build --bin lighthouse --target aarch64-unknown-linux-gnu --features "portable,$(CROSS_FEATURES)" --profile "$(CROSS_PROFILE)" --locked
+	JEMALLOC_SYS_WITH_LG_PAGE=16 cross build --bin creditbeacon --target aarch64-unknown-linux-gnu --features "portable,$(CROSS_FEATURES)" --profile "$(CROSS_PROFILE)" --locked
 build-riscv64:
-	cross build --bin lighthouse --target riscv64gc-unknown-linux-gnu --features "portable,$(CROSS_FEATURES)" --profile "$(CROSS_PROFILE)" --locked
+	cross build --bin creditbeacon --target riscv64gc-unknown-linux-gnu --features "portable,$(CROSS_FEATURES)" --profile "$(CROSS_PROFILE)" --locked
 
 build-lcli-x86_64:
 	cross build --bin lcli --target x86_64-unknown-linux-gnu --features "portable" --profile "$(CROSS_PROFILE)" --locked
@@ -119,14 +119,14 @@ RUST_IMAGE_AMD64 ?= rust:1.88-bullseye@sha256:8e3c421122bf4cd3b2a866af41a4dd52d8
 RUST_IMAGE_ARM64 ?= rust:1.88-bullseye@sha256:8b22455a7ce2adb1355067638284ee99d21cc516fab63a96c4514beaf370aa94
 
 .PHONY: build-reproducible
-build-reproducible: ## Build the lighthouse binary into `target` directory with reproducible builds
+build-reproducible: ## Build the creditbeacon binary into `target` directory with reproducible builds
 	SOURCE_DATE_EPOCH=$(SOURCE_DATE) \
 	RUSTFLAGS="${RUST_BUILD_FLAGS} --remap-path-prefix $$(pwd)=." \
 	CARGO_INCREMENTAL=${CARGO_INCREMENTAL_VAL} \
 	LC_ALL=${LOCALE_VAL} \
 	TZ=${TZ_VAL} \
 	JEMALLOC_OVERRIDE=${JEMALLOC_OVERRIDE} \
-	cargo build --bin lighthouse --features "$(FEATURES_REPRODUCIBLE)" --profile "$(PROFILE)" --locked --target $(RUST_TARGET)
+	cargo build --bin creditbeacon --features "$(FEATURES_REPRODUCIBLE)" --profile "$(PROFILE)" --locked --target $(RUST_TARGET)
 
 .PHONY: build-reproducible-x86_64
 build-reproducible-x86_64: ## Build reproducible x86_64 Docker image
@@ -134,7 +134,7 @@ build-reproducible-x86_64: ## Build reproducible x86_64 Docker image
 		--build-arg RUST_TARGET="x86_64-unknown-linux-gnu" \
 		--build-arg RUST_IMAGE=$(RUST_IMAGE_AMD64) \
 		-f Dockerfile.reproducible \
-		-t lighthouse:reproducible-amd64 .
+		-t creditbeacon:reproducible-amd64 .
 
 .PHONY: build-reproducible-aarch64
 build-reproducible-aarch64: ## Build reproducible aarch64 Docker image
@@ -143,21 +143,21 @@ build-reproducible-aarch64: ## Build reproducible aarch64 Docker image
 		--build-arg RUST_TARGET="aarch64-unknown-linux-gnu" \
 		--build-arg RUST_IMAGE=$(RUST_IMAGE_ARM64) \
 		-f Dockerfile.reproducible \
-		-t lighthouse:reproducible-arm64 .
+		-t creditbeacon:reproducible-arm64 .
 
 .PHONY: build-reproducible-all
 build-reproducible-all: build-reproducible-x86_64 build-reproducible-aarch64 ## Build both x86_64 and aarch64 reproducible Docker images
 
 # Create a `.tar.gz` containing a binary for a specific target.
 define tarball_release_binary
-	cp $(1)/lighthouse $(BIN_DIR)/lighthouse
+	cp $(1)/creditbeacon $(BIN_DIR)/creditbeacon
 	cd $(BIN_DIR) && \
-		tar -czf lighthouse-$(GIT_TAG)-$(2)$(3).tar.gz lighthouse && \
-		rm lighthouse
+		tar -czf creditbeacon-$(GIT_TAG)-$(2)$(3).tar.gz creditbeacon && \
+		rm creditbeacon
 endef
 
 # Create a series of `.tar.gz` files in the BIN_DIR directory, each containing
-# a `lighthouse` binary for a different target.
+# a `creditbeacon` binary for a different target.
 #
 # The current git tag will be used as the version in the output file names. You
 # will likely need to use `git tag` and create a semver tag (e.g., `v0.2.3`).
@@ -250,7 +250,7 @@ test-ef: make-ef-tests run-ef-tests
 # Downloads and runs the nightly EF test vectors.
 test-ef-nightly: make-ef-tests-nightly run-ef-tests
 
-# Runs tests checking interop between Lighthouse and execution clients.
+# Runs tests checking interop between CreditChain Beacon and execution clients.
 test-exec-engine:
 	make -C $(EXECUTION_ENGINE_INTEGRATION) test
 
@@ -258,13 +258,13 @@ test-exec-engine:
 # test vectors.
 test: test-release
 
-# Updates the CLI help text pages in the Lighthouse book, building with Docker (primarily for Windows users).
+# Updates the CLI help text pages in the CreditChain Beacon book, building with Docker (primarily for Windows users).
 cli:
 	docker run --rm --user=root \
-	-v ${PWD}:/home/runner/actions-runner/lighthouse sigmaprime/github-runner \
-	bash -c 'cd lighthouse && make && ./scripts/cli.sh'
+	-v ${PWD}:/home/runner/actions-runner/creditbeacon sigmaprime/github-runner \
+	bash -c 'cd creditbeacon && make && ./scripts/cli.sh'
 
-# Updates the CLI help text pages in the Lighthouse book, building using local
+# Updates the CLI help text pages in the CreditChain Beacon book, building using local
 # `cargo`.
 cli-local:
 	make && ./scripts/cli.sh

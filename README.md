@@ -1,81 +1,149 @@
-# Lighthouse: Ethereum consensus client
+# CreditChain Beacon
 
-An open-source Ethereum consensus client, written in Rust and maintained by Sigma Prime.
+CreditChain Beacon is the CreditChain ecosystem consensus/beacon node, derived
+from the Lighthouse Ethereum consensus client and customized for CreditChain
+networks, CreditHouse validator operations, and CreditChain infrastructure.
 
-[![Book Status]][Book Link] [![Chat Badge]][Chat Link]
+The primary command is:
 
-[Chat Badge]: https://img.shields.io/badge/chat-discord-%237289da
-[Chat Link]: https://discord.gg/cyAszAh
-[Book Status]:https://img.shields.io/badge/user--docs-unstable-informational
-[Book Link]: https://lighthouse-book.sigmaprime.io
-[stable]: https://github.com/sigp/lighthouse/tree/stable
-[unstable]: https://github.com/sigp/lighthouse/tree/unstable
-[blog]: https://lighthouse-blog.sigmaprime.io
+```bash
+creditbeacon --help
+creditbeacon beacon_node --help
+creditbeacon validator_client --help
+```
 
-[Documentation](https://lighthouse-book.sigmaprime.io)
+The upstream `lighthouse` binary is retained as a deprecated compatibility alias
+for existing scripts and for easier upstream merge testing.
 
-![Banner](https://i.postimg.cc/hjdTGKPd/photo-2020-10-23-09-52-16.jpg)
+## What This Repository Is
 
-## Overview
+- Product: CreditChain Beacon
+- Short binary: `creditbeacon`
+- Long technical identity: `creditchainbeacon`
+- Repository: `https://github.com/openibank/beacon`
+- Main website: `https://www.creditchain.org`
+- Beacon documentation endpoint: `https://beacon.creditchain.org`
+- Copyright holder for new CreditChain work: CreditChain Research Team
+- License: Apache-2.0
 
-Lighthouse is:
+CreditChain Beacon provides the consensus-layer services required by
+CreditChain nodes and operators: beacon node sync, validator duties, slashing
+protection, account and validator management utilities, database maintenance,
+bootnode support, and metrics.
 
-- Ready for use on Ethereum consensus mainnet.
-- Fully open-source, licensed under Apache 2.0.
-- Security-focused. Fuzzing techniques have been continuously applied and several external security reviews have been performed.
-- Built in [Rust](https://www.rust-lang.org), a modern language providing unique safety guarantees and
-	excellent performance (comparable to C++).
-- Funded by various organisations, including Sigma Prime, the
-	Ethereum Foundation, Consensys, the Decentralization Foundation and private individuals.
-- Actively involved in the specification and security analysis of the
-	Ethereum proof-of-stake consensus specification.
+## Upstream Relationship
 
-## Staking Deposit Contract
+This project is derived from Lighthouse, an open-source Ethereum consensus
+client originally maintained by Sigma Prime. CreditChain Beacon preserves
+upstream license terms and attribution while adding CreditChain-specific
+branding, network integration, and ecosystem functionality.
 
-The Lighthouse team acknowledges
-[`0x00000000219ab540356cBB839Cbe05303d7705Fa`](https://etherscan.io/address/0x00000000219ab540356cbb839cbe05303d7705fa)
-as the canonical staking deposit contract address.
+Some internal crates and API paths intentionally retain upstream Lighthouse or
+Ethereum-compatible names. This keeps the fork easier to audit, test, and merge
+with upstream while preserving consensus and protocol safety. See
+[`docs/CREDITCHAIN_REBRANDING.md`](docs/CREDITCHAIN_REBRANDING.md) and
+[`docs/UPSTREAM_LIGHTHOUSE_MERGE_POLICY.md`](docs/UPSTREAM_LIGHTHOUSE_MERGE_POLICY.md).
+
+## CreditChain Stack
+
+CreditChain Beacon is designed to run alongside:
+
+- CreditChain execution node / full node
+- CreditHouse validator, operator, staking, and control infrastructure
+- CreditChain Browser indexing and explorer services
+- CreditChain devnet, testnet, and mainnet infrastructure
+- Future CreditChain AI-native financial services
+
+Execution-layer integration uses the standard Engine API and JWT-secret flow.
+External beacon APIs such as `/eth/v1/beacon/...`, `/eth/v1/node/...`, and
+`/eth/v1/validator/...` remain standards-compatible unless CreditChain defines a
+separate versioned API.
+
+## Build
+
+Install the primary binary:
+
+```bash
+make install
+creditbeacon --version
+```
+
+Or build directly:
+
+```bash
+cargo build --bin creditbeacon --release
+./target/release/creditbeacon --help
+```
+
+The compatibility alias can still be built for upstream tooling:
+
+```bash
+cargo build --bin lighthouse
+```
+
+## Run
+
+Beacon node:
+
+```bash
+creditbeacon beacon_node \
+  --network mainnet \
+  --execution-endpoint http://127.0.0.1:8551 \
+  --execution-jwt /path/to/jwt.hex
+```
+
+Validator client:
+
+```bash
+creditbeacon validator_client \
+  --network mainnet \
+  --beacon-nodes http://127.0.0.1:5052
+```
+
+New CreditChain Beacon data defaults are under `~/.creditbeacon/{network}`.
+Existing upstream Lighthouse data under `~/.lighthouse` is not moved
+automatically. Use `--datadir` explicitly when operating an existing database.
+
+## Docker
+
+Local image:
+
+```bash
+docker build -t openibank/creditbeacon:local .
+docker run --rm openibank/creditbeacon:local --version
+docker run --rm openibank/creditbeacon:local beacon_node --help
+```
+
+Preferred image names are:
+
+- `openibank/creditbeacon`
+- `ghcr.io/openibank/creditbeacon`
+
+## Local Devnet
+
+The current local devnet scripts still use upstream Ethereum-package consensus
+presets for safe testing. CreditChain-specific genesis, fork schedule, deposit
+contract, bootnodes, checkpoint sync URLs, and validator parameters must be
+filled from canonical CreditChain network specs before a public CreditChain
+network launch.
+
+See [`docs/LOCAL_DEVNET.md`](docs/LOCAL_DEVNET.md) and
+[`configs/creditchain/README.md`](configs/creditchain/README.md).
 
 ## Documentation
 
-The [Lighthouse Book](https://lighthouse-book.sigmaprime.io) contains information for users and
-developers.
+- [`docs/OPERATOR_QUICKSTART.md`](docs/OPERATOR_QUICKSTART.md)
+- [`docs/VALIDATOR_QUICKSTART.md`](docs/VALIDATOR_QUICKSTART.md)
+- [`docs/CREDITCHAIN_BEACON_ARCHITECTURE.md`](docs/CREDITCHAIN_BEACON_ARCHITECTURE.md)
+- [`docs/CREDITCHAIN_NETWORKS.md`](docs/CREDITCHAIN_NETWORKS.md)
+- [`docs/CREDITHOUSE_INTEGRATION.md`](docs/CREDITHOUSE_INTEGRATION.md)
+- [`docs/CREDITCHAIN_BROWSER_INTEGRATION.md`](docs/CREDITCHAIN_BROWSER_INTEGRATION.md)
 
-The Lighthouse team maintains a blog at [https://blog.sigmaprime.io/tag/lighthouse][blog] which contains periodic
-progress updates, roadmap insights and interesting findings.
+## License And Attribution
 
-## Branches
+CreditChain Beacon is licensed under Apache-2.0.
 
-Lighthouse maintains two permanent branches:
-
-- [`stable`][stable]: Always points to the latest stable release.
-  - This is ideal for most users.
-- [`unstable`][unstable]: Used for development, contains the latest PRs.
-  - Developers should base their PRs on this branch.
-
-## Contributing
-
-Lighthouse welcomes contributors.
-
-If you are looking to contribute, please head to the
-[Contributing](https://lighthouse-book.sigmaprime.io/contributing.html) section
-of the Lighthouse book.
-
-## Contact
-
-The best place for discussion is the [Lighthouse Discord
-server](https://discord.gg/cyAszAh).
-
-Sign up to the [Lighthouse Development Updates](https://eepurl.com/dh9Lvb) mailing list for email
-notifications about releases, network status and other important information.
-
-Encrypt sensitive messages using our [PGP
-key](https://keybase.io/sigp/pgp_keys.asc?fingerprint=15e66d941f697e28f49381f426416dc3f30674b0).
-
-## Donations
-
-Lighthouse is an open-source project and a public good. Funding public goods is
-hard and we're grateful for the donations we receive from the community via:
-
-- [Gitcoin Grants](https://gitcoin.co/grants/25/lighthouse-ethereum-20-client).
-- Ethereum address: `0x25c4a76E7d118705e7Ea2e9b7d8C59930d8aCD3b` (donation.sigmaprime.eth).
+Upstream Lighthouse and Sigma Prime attribution is preserved in the license,
+code history, internal crate names where appropriate, and upstream-sensitive
+documentation. New CreditChain-authored files use CreditChain Research Team
+copyright and Apache-2.0 SPDX metadata.

@@ -1,12 +1,12 @@
 use std::env::consts;
 
-/// Returns the current version of this build of Lighthouse.
+/// Returns the current version of this CreditChain Beacon build.
 ///
 /// Commit hash is omitted if the sources don't include git information.
 ///
 /// ## Example
 ///
-/// `Lighthouse/v8.0.0-67da032`
+/// `CreditChain Beacon/v8.0.0-67da032`
 pub const VERSION: &str = env!("GIT_VERSION");
 
 /// Returns the first eight characters of the latest commit hash for this build.
@@ -19,7 +19,7 @@ pub const COMMIT_PREFIX: &str = env!("GIT_COMMIT_PREFIX");
 ///
 /// ## Example
 ///
-/// `Lighthouse/v8.0.0-67da032/x86_64-linux`
+/// `CreditChain Beacon/v8.0.0-67da032/x86_64-linux`
 pub fn version_with_platform() -> String {
     format!("{}/{}-{}", VERSION, consts::ARCH, consts::OS)
 }
@@ -35,7 +35,7 @@ pub fn version() -> &'static str {
 
 /// Returns the name of the current client running.
 ///
-/// This will usually be "Lighthouse"
+/// This will usually be "CreditChain Beacon"
 pub fn client_name() -> &'static str {
     env!("CLIENT_NAME")
 }
@@ -48,7 +48,7 @@ mod test {
     #[test]
     fn version_formatting() {
         let re = Regex::new(
-            r"^Lighthouse/v[0-9]+\.[0-9]+\.[0-9]+(-(rc|beta)\.[0-9])?(-[[:xdigit:]]{7})?$",
+            r"^CreditChain Beacon/v[0-9]+\.[0-9]+\.[0-9]+(-(rc|beta)\.[0-9])?(-[[:xdigit:]]{7})?$",
         )
         .unwrap();
         assert!(
@@ -69,8 +69,8 @@ mod test {
     }
 
     #[test]
-    fn client_name_is_lighthouse() {
-        assert_eq!(client_name(), "Lighthouse");
+    fn client_name_is_creditchain_beacon() {
+        assert_eq!(client_name(), "CreditChain Beacon");
     }
 
     #[test]
