@@ -180,7 +180,7 @@ macro_rules! define_archive {
                 use super::*;
 
                 pub const ETH2_NET_DIR: Eth2NetArchiveAndDirectory = Eth2NetArchiveAndDirectory {
-                    name: stringify!($name_ident),
+                    name: $config_dir,
                     config_dir: $config_dir,
                     genesis_state_source: $genesis_state_source,
                 };
@@ -240,7 +240,7 @@ macro_rules! define_nets {
             const [<$name_ident:upper>]: $this_crate::HardcodedNet = $this_crate::define_net!($this_crate, $name_ident, [<include_ $name_ident _file>]);
             )+
             const HARDCODED_NETS: &[$this_crate::HardcodedNet] = &[$([<$name_ident:upper>],)+];
-            pub const HARDCODED_NET_NAMES: &[&'static str] = &[$(stringify!($name_ident),)+];
+            pub const HARDCODED_NET_NAMES: &[&'static str] = &[$([<$name_ident:upper>].name,)+];
         }
     };
 }
@@ -358,5 +358,12 @@ define_hardcoded_nets!(
         "hoodi",
         // Describes how the genesis state can be obtained.
         HOODI_GENESIS_STATE_SOURCE
+    ),
+    (
+        // CreditChain Argos testnet. Selected with `--network argos-testnet`, matching the
+        // execution client's `--chain argos-testnet`.
+        argos_testnet,
+        "argos-testnet",
+        GenesisStateSource::IncludedBytes
     )
 );
