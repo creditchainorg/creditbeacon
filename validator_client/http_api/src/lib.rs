@@ -1,3 +1,6 @@
+#[cfg(feature = "testing")]
+pub mod test_utils;
+
 mod api_secret;
 mod create_signed_voluntary_exit;
 mod create_validator;
@@ -6,7 +9,6 @@ mod keystores;
 mod remotekeys;
 mod tests;
 
-pub mod test_utils;
 pub use api_secret::PK_FILENAME;
 
 use graffiti::{delete_graffiti, get_graffiti, set_graffiti};
@@ -856,19 +858,23 @@ pub fn serve<T: 'static + SlotClock + Clone, E: EthSpec>(
         .then(
             move |request: UpdateCandidatesRequest,
                   block_service: BlockService<LighthouseValidatorStore<T, E>, T>| async move {
-                async fn parse_urls(urls: &[String]) -> Result<Vec<SensitiveUrl>, Response> {
+                // The error is the fully built HTTP response, which is large; box it to keep
+                // the `Result` small (`clippy::result_large_err`).
+                async fn parse_urls(urls: &[String]) -> Result<Vec<SensitiveUrl>, Box<Response>> {
                     match urls
                         .iter()
                         .map(|url| SensitiveUrl::parse(url).map_err(|e| e.to_string()))
                         .collect()
                     {
                         Ok(sensitive_urls) => Ok(sensitive_urls),
-                        Err(_) => Err(convert_rejection::<Infallible>(Err(
-                            warp_utils::reject::custom_bad_request(
-                                "one or more urls could not be parsed".to_string(),
-                            ),
-                        ))
-                        .await),
+                        Err(_) => Err(Box::new(
+                            convert_rejection::<Infallible>(Err(
+                                warp_utils::reject::custom_bad_request(
+                                    "one or more urls could not be parsed".to_string(),
+                                ),
+                            ))
+                            .await,
+                        )),
                     }
                 }
 
@@ -888,7 +894,7 @@ pub fn serve<T: 'static + SlotClock + Clone, E: EthSpec>(
                             }
                         }
                     }
-                    Err(e) => return e,
+                    Err(e) => return *e,
                 };
 
                 let response: UpdateCandidatesResponse = UpdateCandidatesResponse {

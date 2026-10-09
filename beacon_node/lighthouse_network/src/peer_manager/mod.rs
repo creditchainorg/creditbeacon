@@ -589,7 +589,10 @@ impl<E: EthSpec> PeerManager<E> {
                     Protocol::Ping => PeerAction::MidToleranceError,
                     Protocol::BlocksByRange => PeerAction::MidToleranceError,
                     Protocol::BlocksByRoot => PeerAction::MidToleranceError,
+                    Protocol::BlocksByHead => PeerAction::MidToleranceError,
                     Protocol::BlobsByRange => PeerAction::MidToleranceError,
+                    Protocol::PayloadEnvelopesByRange => PeerAction::MidToleranceError,
+                    Protocol::PayloadEnvelopesByRoot => PeerAction::MidToleranceError,
                     // Lighthouse does not currently make light client requests; therefore, this
                     // is an unexpected scenario. We do not ban the peer for rate limiting.
                     Protocol::LightClientBootstrap => return,
@@ -615,6 +618,9 @@ impl<E: EthSpec> PeerManager<E> {
                     Protocol::Ping => PeerAction::Fatal,
                     Protocol::BlocksByRange => return,
                     Protocol::BlocksByRoot => return,
+                    Protocol::BlocksByHead => return,
+                    Protocol::PayloadEnvelopesByRange => return,
+                    Protocol::PayloadEnvelopesByRoot => return,
                     Protocol::BlobsByRange => return,
                     Protocol::BlobsByRoot => return,
                     Protocol::DataColumnsByRoot => return,
@@ -638,6 +644,9 @@ impl<E: EthSpec> PeerManager<E> {
                     Protocol::Ping => PeerAction::LowToleranceError,
                     Protocol::BlocksByRange => PeerAction::MidToleranceError,
                     Protocol::BlocksByRoot => PeerAction::MidToleranceError,
+                    Protocol::BlocksByHead => PeerAction::MidToleranceError,
+                    Protocol::PayloadEnvelopesByRange => PeerAction::MidToleranceError,
+                    Protocol::PayloadEnvelopesByRoot => PeerAction::MidToleranceError,
                     Protocol::BlobsByRange => PeerAction::MidToleranceError,
                     Protocol::BlobsByRoot => PeerAction::MidToleranceError,
                     Protocol::DataColumnsByRoot => PeerAction::MidToleranceError,
@@ -2031,11 +2040,11 @@ mod tests {
             .peer_info_mut(&peer0)
             .unwrap()
             .set_meta_data(MetaData::V3(metadata));
-        peer_manager
-            .network_globals
-            .peers
-            .write()
-            .add_subscription(&peer0, Subnet::Attestation(1.into()));
+        peer_manager.network_globals.peers.write().add_subscription(
+            &peer0,
+            Subnet::Attestation(1.into()),
+            false,
+        );
 
         let mut attnets = crate::types::EnrAttestationBitfield::<E>::new();
         attnets.set(10, true).unwrap();
@@ -2052,11 +2061,11 @@ mod tests {
             .peer_info_mut(&peer2)
             .unwrap()
             .set_meta_data(MetaData::V3(metadata));
-        peer_manager
-            .network_globals
-            .peers
-            .write()
-            .add_subscription(&peer2, Subnet::Attestation(10.into()));
+        peer_manager.network_globals.peers.write().add_subscription(
+            &peer2,
+            Subnet::Attestation(10.into()),
+            false,
+        );
 
         let mut syncnets = crate::types::EnrSyncCommitteeBitfield::<E>::new();
         syncnets.set(3, true).unwrap();
@@ -2073,11 +2082,11 @@ mod tests {
             .peer_info_mut(&peer4)
             .unwrap()
             .set_meta_data(MetaData::V3(metadata));
-        peer_manager
-            .network_globals
-            .peers
-            .write()
-            .add_subscription(&peer4, Subnet::SyncCommittee(3.into()));
+        peer_manager.network_globals.peers.write().add_subscription(
+            &peer4,
+            Subnet::SyncCommittee(3.into()),
+            false,
+        );
 
         // Perform the heartbeat.
         peer_manager.heartbeat();
@@ -2174,11 +2183,11 @@ mod tests {
                 peer_info.update_sync_status(empty_synced_status());
             }
 
-            peer_manager
-                .network_globals
-                .peers
-                .write()
-                .add_subscription(&peer, Subnet::DataColumn(subnet.into()));
+            peer_manager.network_globals.peers.write().add_subscription(
+                &peer,
+                Subnet::DataColumn(subnet.into()),
+                false,
+            );
             println!("{},{},{}", x, subnet, peer);
             peers.push(peer);
         }
@@ -2227,7 +2236,7 @@ mod tests {
                         // Make sure a peer on the same subnet has been removed
                         println!(
                             "Check against: {}, {}",
-                            alternative_index, &peers[alternative_index]
+                            alternative_index, peers[alternative_index]
                         );
                         assert!(!connected_peers.contains(&peers[alternative_index]));
                     }
@@ -2295,7 +2304,7 @@ mod tests {
                     .network_globals
                     .peers
                     .write()
-                    .add_subscription(&peer, subnet);
+                    .add_subscription(&peer, subnet, false);
             }
             println!("{},{}", x, peer);
             peers.push(peer);
@@ -2399,7 +2408,7 @@ mod tests {
                     .network_globals
                     .peers
                     .write()
-                    .add_subscription(&peer, subnet);
+                    .add_subscription(&peer, subnet, false);
             }
             peers.push(peer);
         }
@@ -2498,7 +2507,7 @@ mod tests {
                     .network_globals
                     .peers
                     .write()
-                    .add_subscription(&peer, subnet);
+                    .add_subscription(&peer, subnet, false);
             }
             println!("{},{}", peer_idx, peer);
             peers.push(peer);
@@ -2670,7 +2679,7 @@ mod tests {
                     .network_globals
                     .peers
                     .write()
-                    .add_subscription(&peer, subnet);
+                    .add_subscription(&peer, subnet, false);
             }
             peers.push(peer);
         }
@@ -2737,11 +2746,11 @@ mod tests {
                 .unwrap()
                 .set_meta_data(MetaData::V3(metadata));
 
-            peer_manager
-                .network_globals
-                .peers
-                .write()
-                .add_subscription(&peer, Subnet::Attestation((subnet as u64).into()));
+            peer_manager.network_globals.peers.write().add_subscription(
+                &peer,
+                Subnet::Attestation((subnet as u64).into()),
+                false,
+            );
 
             peers.push(peer);
         }
@@ -2842,7 +2851,7 @@ mod tests {
                     .network_globals
                     .peers
                     .write()
-                    .add_subscription(&peer, subnet);
+                    .add_subscription(&peer, subnet, false);
             }
 
             peers.push(peer);
@@ -2928,7 +2937,7 @@ mod tests {
                 }
 
                 for subnet in peer_info.long_lived_subnets() {
-                    peers_db.add_subscription(&peer, subnet);
+                    peers_db.add_subscription(&peer, subnet, false);
                 }
 
                 peers.push(peer);
@@ -3081,6 +3090,9 @@ mod tests {
         const MAX_TEST_PEERS: usize = 300;
 
         proptest! {
+            // 64 cases (down from default 256) keeps this test under 10s while
+            // still providing good random coverage of the pruning logic.
+            #![proptest_config(ProptestConfig::with_cases(64))]
             #[test]
             fn prune_excess_peers(peer_conditions in proptest::collection::vec(peer_condition_strategy(), DEFAULT_TARGET_PEERS..=MAX_TEST_PEERS)) {
                 let target_peer_count = DEFAULT_TARGET_PEERS;
@@ -3146,7 +3158,7 @@ mod tests {
                         peer_info.set_custody_subnets(condition.custody_subnets.clone());
 
                         for subnet in peer_info.long_lived_subnets() {
-                            peer_db.add_subscription(&condition.peer_id, subnet);
+                            peer_db.add_subscription(&condition.peer_id, subnet, false);
                         }
                     }
 

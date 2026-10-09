@@ -19,7 +19,7 @@ use crate::sync::manager::BatchProcessResult;
 use crate::sync::network_context::{
     RangeRequestId, RpcRequestSendError, RpcResponseError, SyncNetworkContext,
 };
-use beacon_chain::block_verification_types::RpcBlock;
+use beacon_chain::block_verification_types::RangeSyncBlock;
 use beacon_chain::{BeaconChain, BeaconChainTypes};
 use lighthouse_network::service::api_types::Id;
 use lighthouse_network::types::{BackFillState, NetworkGlobals};
@@ -55,7 +55,7 @@ const MAX_BATCH_DOWNLOAD_ATTEMPTS: u8 = 10;
 /// after `MAX_BATCH_PROCESSING_ATTEMPTS` times, it is considered faulty.
 const MAX_BATCH_PROCESSING_ATTEMPTS: u8 = 10;
 
-type RpcBlocks<E> = Vec<RpcBlock<E>>;
+type RpcBlocks<E> = Vec<RangeSyncBlock<E>>;
 
 type BackFillBatchInfo<E> = BatchInfo<E, BackFillBatchConfig<E>, RpcBlocks<E>>;
 
@@ -351,6 +351,9 @@ impl<T: BeaconChainTypes> BackFillSync<T> {
                     CouplingError::BlobPeerFailure(msg) => {
                         debug!(?batch_id, msg, "Blob peer failure");
                     }
+                    CouplingError::EnvelopePeerFailure(msg) => {
+                        debug!(?batch_id, msg, "Envelope peer failure");
+                    }
                     CouplingError::InternalError(msg) => {
                         error!(?batch_id, msg, "Block components coupling internal error");
                     }
@@ -390,7 +393,7 @@ impl<T: BeaconChainTypes> BackFillSync<T> {
         batch_id: BatchId,
         peer_id: &PeerId,
         request_id: Id,
-        blocks: Vec<RpcBlock<T::EthSpec>>,
+        blocks: Vec<RangeSyncBlock<T::EthSpec>>,
     ) -> Result<ProcessResult, BackFillError> {
         // check if we have this batch
         let Some(batch) = self.batches.get_mut(&batch_id) else {
@@ -802,7 +805,7 @@ impl<T: BeaconChainTypes> BackFillSync<T> {
                 BatchState::Downloading(..) => {}
                 BatchState::AwaitingDownload => return,
                 BatchState::Failed | BatchState::Poisoned => {
-                    crit!("batch indicates inconsistent chain state while advancing chain")
+                    crit!("batch indicates inconsistent chain state while advancing chain");
                 }
                 BatchState::AwaitingProcessing(..) => {}
                 BatchState::Processing(_) => {
@@ -1074,7 +1077,7 @@ impl<T: BeaconChainTypes> BackFillSync<T> {
             .iter()
             .filter(|&(_epoch, batch)| in_buffer(batch))
             .count()
-            > BACKFILL_BATCH_BUFFER_SIZE as usize
+            >= BACKFILL_BATCH_BUFFER_SIZE as usize
         {
             return None;
         }
@@ -1229,7 +1232,7 @@ mod tests {
     fn request_batches_should_not_loop_infinitely() {
         let harness = BeaconChainHarness::builder(MinimalEthSpec)
             .default_spec()
-            .deterministic_keypairs(4)
+            .deterministic_keypairs(8)
             .fresh_ephemeral_store()
             .build();
 
@@ -1247,7 +1250,7 @@ mod tests {
             let peer_id = network_globals
                 .peers
                 .write()
-                .__add_connected_peer_testing_only(
+                .__add_connected_peer_with_custody_subnets(
                     true,
                     &beacon_chain.spec,
                     k256::ecdsa::SigningKey::random(&mut rng).into(),

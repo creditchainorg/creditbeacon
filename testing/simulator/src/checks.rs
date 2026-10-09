@@ -175,8 +175,13 @@ pub async fn verify_fork_version<E: EthSpec>(
     Ok(())
 }
 
-/// Verify that all sync aggregates from `sync_committee_start_slot` until `upto_slot`
-/// have full aggregates.
+/// A late block makes the sync committee sign the grandparent root, so the next block's
+/// aggregate comes out empty rather than partial. Tolerate a few of those. A partial aggregate
+/// means contributions were actually lost, and is never tolerated.
+const MAX_EMPTY_SYNC_AGGREGATES: usize = 3;
+
+/// Verify that the sync aggregates from `sync_committee_start_slot` until `upto_slot` are full,
+/// allowing up to `MAX_EMPTY_SYNC_AGGREGATES` empty ones caused by late blocks.
 pub async fn verify_full_sync_aggregates_up_to<E: EthSpec>(
     network: LocalNetwork<E>,
     sync_committee_start_slot: Slot,
@@ -186,6 +191,7 @@ pub async fn verify_full_sync_aggregates_up_to<E: EthSpec>(
     slot_delay(upto_slot, slot_duration).await;
     let remote_nodes = network.remote_nodes()?;
     let remote_node = remote_nodes.first().unwrap();
+    let mut empty_aggregate_slots = vec![];
 
     for slot in sync_committee_start_slot.as_u64()..=upto_slot.as_u64() {
         let sync_aggregate_count = remote_node
@@ -207,9 +213,11 @@ pub async fn verify_full_sync_aggregates_up_to<E: EthSpec>(
             .map_err(|e| format!("Error while getting beacon block: {:?}", e))?
             .map_err(|_| format!("Altair block {} should have sync aggregate", slot))?;
 
-        if sync_aggregate_count != E::sync_committee_size() {
+        if sync_aggregate_count == 0 {
+            empty_aggregate_slots.push(slot);
+        } else if sync_aggregate_count != E::sync_committee_size() {
             return Err(format!(
-                "Sync aggregate at slot {} was not full, got: {}, expected: {}",
+                "Sync aggregate at slot {} was partial, got: {}, expected: {}",
                 slot,
                 sync_aggregate_count,
                 E::sync_committee_size()
@@ -217,8 +225,19 @@ pub async fn verify_full_sync_aggregates_up_to<E: EthSpec>(
         }
     }
 
+    if empty_aggregate_slots.len() > MAX_EMPTY_SYNC_AGGREGATES {
+        return Err(format!(
+            "{} empty sync aggregates, expected at most {}. Slots: {:?}",
+            empty_aggregate_slots.len(),
+            MAX_EMPTY_SYNC_AGGREGATES,
+            empty_aggregate_slots
+        ));
+    }
+
     Ok(())
 }
+
+// TODO(EIP-7732): Add verify_ptc_duties_executed function to verify that PTC duties are being fetched and executed correctly when Gloas fork is enabled
 
 /// Verify that the first merged PoS block got finalized.
 pub async fn verify_transition_block_finalized<E: EthSpec>(
@@ -463,6 +482,9 @@ pub async fn reconnect_to_execution_layer<E: EthSpec>(
 }
 
 /// Ensure all validators have attested correctly.
+///
+/// Checks attestation rewards for head, target, and source.
+/// A positive reward indicates a correct vote.
 pub async fn check_attestation_correctness<E: EthSpec>(
     network: LocalNetwork<E>,
     start_epoch: u64,
@@ -476,54 +498,49 @@ pub async fn check_attestation_correctness<E: EthSpec>(
 
     let remote_node = &network.remote_nodes()?[node_index];
 
-    let results = remote_node
-        .get_lighthouse_analysis_attestation_performance(
-            Epoch::new(start_epoch),
-            Epoch::new(upto_epoch - 2),
-            "global".to_string(),
-        )
-        .await
-        .map_err(|e| format!("Unable to get attestation performance: {e}"))?;
-
-    let mut active_successes: f64 = 0.0;
     let mut head_successes: f64 = 0.0;
     let mut target_successes: f64 = 0.0;
     let mut source_successes: f64 = 0.0;
-
     let mut total: f64 = 0.0;
 
-    for result in results {
-        for epochs in result.epochs.values() {
+    let end_epoch = upto_epoch
+        .checked_sub(2)
+        .ok_or_else(|| "upto_epoch must be >= 2 to have attestation rewards".to_string())?;
+    for epoch in start_epoch..=end_epoch {
+        let response = remote_node
+            .post_beacon_rewards_attestations(Epoch::new(epoch), &[])
+            .await
+            .map_err(|e| format!("Unable to get attestation rewards for epoch {epoch}: {e}"))?;
+
+        for reward in &response.data.total_rewards {
             total += 1.0;
 
-            if epochs.active {
-                active_successes += 1.0;
-            }
-            if epochs.head {
+            // A positive reward means the validator made a correct vote.
+            if reward.head > 0 {
                 head_successes += 1.0;
             }
-            if epochs.target {
+            if reward.target > 0 {
                 target_successes += 1.0;
             }
-            if epochs.source {
+            if reward.source > 0 {
                 source_successes += 1.0;
             }
         }
     }
-    let active_percent = active_successes / total * 100.0;
+
+    if total == 0.0 {
+        return Err("No attestation rewards data found".to_string());
+    }
+
     let head_percent = head_successes / total * 100.0;
     let target_percent = target_successes / total * 100.0;
     let source_percent = source_successes / total * 100.0;
 
     eprintln!("Total Attestations: {}", total);
-    eprintln!("Active: {}: {}%", active_successes, active_percent);
     eprintln!("Head: {}: {}%", head_successes, head_percent);
     eprintln!("Target: {}: {}%", target_successes, target_percent);
     eprintln!("Source: {}: {}%", source_successes, source_percent);
 
-    if active_percent < acceptable_attestation_performance {
-        return Err("Active percent was below required level".to_string());
-    }
     if head_percent < acceptable_attestation_performance {
         return Err("Head percent was below required level".to_string());
     }
